@@ -1,0 +1,21 @@
+.git
+.gitignore
+.github
+.idea
+.vscode
+*.iml
+target
+.mvn/wrapper/maven-wrapper.jar
+
+# Never ship secrets or local config inside the image
+.env
+*.env
+src/main/resources/application-local.properties
+settings.xml
+*.pem
+*.key
+
+*.md
+*.log
+Dockerfile
+docker-compose*.yml
