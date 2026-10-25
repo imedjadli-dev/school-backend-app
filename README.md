@@ -109,6 +109,28 @@ DB_USERNAME=school_user DB_PASSWORD=change-me-locally DDL_AUTO=update ./mvnw spr
 - Swagger UI: `http://localhost:8082/api/swagger-ui/index.html`
 - OpenAPI spec: `http://localhost:8082/api/v3/api-docs`
 
+## Run with Docker Compose
+
+Runs the app and PostgreSQL together, with no local Java or Postgres needed.
+
+```bash
+cp .env.example .env            # then set POSTGRES_PASSWORD in .env
+docker compose config -q        # validate the file and required variables
+docker compose up -d --build
+docker compose ps               # both services should become "healthy"
+curl -s localhost:8082/api/actuator/health/liveness
+```
+
+Useful commands:
+
+```bash
+docker compose logs -f backend
+docker compose down             # stop, keep the database volume
+docker compose down -v          # stop and DELETE the database volume
+```
+
+Ports are bound to `127.0.0.1` only: app on `8082`, Postgres on `5433` (to avoid clashing with a local Postgres on `5432`).
+
 ## Build and Test
 
 ```bash
@@ -131,8 +153,8 @@ This project is also my playground for building a production-style DevOps workfl
 
 - [x] Git repository, `.gitignore`, secrets kept out of source control
 - [x] Externalized configuration (12-factor style, env vars + profiles)
-- [ ] Multi-stage `Dockerfile` (non-root user, pinned base images, healthcheck)
-- [ ] `docker-compose.yml` for the app + PostgreSQL stack
+- [x] Multi-stage `Dockerfile` (non-root user, healthcheck; digest pinning still to do)
+- [x] `docker-compose.yml` for the app + PostgreSQL stack
 - [ ] CI pipeline: build, unit tests, code coverage (JaCoCo)
 - [ ] Static analysis: SonarQube
 - [ ] Container image scanning: Trivy
