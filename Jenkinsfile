@@ -65,11 +65,6 @@ pipeline {
                     message: "✅ SUCCESS: Job '${env.JOB_NAME}' [Build #${env.BUILD_NUMBER}] passed successfully. (<${env.BUILD_URL}|Open in Jenkins>)"
             )
 
-            // Slack Failure Notification
-            slackSend(
-                    color: 'danger',
-                    message: "❌ FAILED: Job '${env.JOB_NAME}' [Build #${env.BUILD_NUMBER}] failed. (<${env.BUILD_URL}|Open in Jenkins>)"
-            )
 
             // Email Success Notification
             emailext(
@@ -81,6 +76,12 @@ pipeline {
 
         failure {
             echo 'PIPELINE STATUS : FAILED'
+
+            // Slack Failure Notification
+            slackSend(
+                    color: 'danger',
+                    message: "❌ FAILED: Job '${env.JOB_NAME}' [Build #${env.BUILD_NUMBER}] failed. (<${env.BUILD_URL}|Open in Jenkins>)"
+            )
 
             // Email Failure Notification
             emailext(
