@@ -95,6 +95,27 @@ pipeline {
                         "CRITICAL ${IMAGE_NAME}:1.${BUILD_NUMBER}"
             }
         }
+
+        stage("Publish Image to Docker Hub") {
+            steps {
+                withCredentials([usernamePassword(credentialsId:
+                        'dockerhub-creds', usernameVariable: 'DOCKER_USER' ,
+                        passwordVariable: 'DOCKER_PASSWORD')]){
+                    script {
+                        //  login to Docker Hub
+                        sh "echo '${DOCKER_PASS}' | docker login -u '${DOCKER_USER}' --password-stdin"
+
+                        // Tag images with your Docker Hub username prefix
+                        sh "docker tag ${IMAGE_NAME}:1.${BUILD_NUMBER} ${DOCKER_USER}/${IMAGE_NAME}:1.${BUILD_NUMBER}"
+                        sh "docker tag ${IMAGE_NAME}:latest ${DOCKER_USER}/${IMAGE_NAME}:latest"
+
+                        // Push versioned tag and latest tag
+                        sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:1.${BUILD_NUMBER}"
+                        sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:latest"
+                    }
+                }
+            }
+        }
     }
 
     post {
