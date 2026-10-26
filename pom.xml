@@ -19,6 +19,7 @@
 		<java.version>17</java.version>
 		<lombok.version>1.18.38</lombok.version>
 		<jacoco.min.coverage>0.00</jacoco.min.coverage>
+		<sonar.host.url>http://127.0.0.1:9000</sonar.host.url>
 	</properties>
 
 	<dependencies>
@@ -123,6 +124,12 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>5.4.0.6343</version>
 			</plugin>
 		</plugins>
 	</build>

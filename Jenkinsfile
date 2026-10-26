@@ -42,6 +42,19 @@ pipeline {
             }
         }
 
+        stage("SonarQube Analysis"){
+            steps{
+                withCredentials([string(credentialsId:'sonar-token',
+                        variable:'SONAR_TOKEN')]){
+                    sh ''' 
+                        ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
+                         -Dsonar.host.url=http://127.0.0.1:9000 \
+                         -Dsonar.token=${SONAR_TOKEN}
+                       '''
+                }
+            }
+        }
+
 
     }
 }
