@@ -21,7 +21,6 @@ pipeline {
         }
 
         stage("Bump version"){
-            when { branch 'main'}
             steps{
                 sh './mvnw versions:set -DnewVersion=1.${BUILD_NUMBER} ' +
                         '-DgenerateBackupPoms=false'
@@ -60,7 +59,6 @@ pipeline {
         }
 
         stage("Deploy to Nexus") {
-            when { branch 'main'}
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     writeFile file: 'settings.xml', text: """<settings>
@@ -88,6 +86,12 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:1.${BUILD_NUMBER} ."
                 sh "docker tag ${IMAGE_NAME}:1.${BUILD_NUMBER} " +
                         "${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage("Container Image Scanning (Trivy)") {
+            steps {
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:1.${BUILD_NUMBER}"
             }
         }
     }
