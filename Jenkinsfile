@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment{
+        IMAGE_NAME = 'school-backend-app'
+    }
+
     options {
         timestamps()
         timeout(time:20 , unit : "MINUTES")
@@ -76,6 +80,14 @@ pipeline {
                             -DaltDeploymentRepository=deploymentRepo::default::http://127.0.0.1:8081/repository/maven-releases/
                     '''
                 }
+            }
+        }
+
+        stage("Docker build"){
+            steps{
+                sh "docker build -t ${IMAGE_NAME}:1.${BUILD_NUMBER} ."
+                sh "docker tag ${IMAGE_NAME}:1.${BUILD_NUMBER} " +
+                        "${IMAGE_NAME}:latest"
             }
         }
     }
