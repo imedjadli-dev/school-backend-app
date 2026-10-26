@@ -53,6 +53,29 @@ pipeline {
                 }
             }
         }
+
+        stage("Deploy to Nexus") {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    writeFile file: 'settings.xml', text: """<settings>
+                        <servers>
+                            <server>
+                                <id>deploymentRepo</id>
+                                <username>${NEXUS_USER}</username>
+                                <password>${NEXUS_PASS}</password>
+                            </server>
+                        </servers>
+                    </settings>
+                    """
+                    sh '''
+                        ./mvnw deploy \
+                            -DskipTests \
+                            -s settings.xml \
+                            -DaltDeploymentRepository=deploymentRepo::default::http://127.0.0.1:8081/repository/maven-releases/
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -93,6 +116,10 @@ pipeline {
 
         always {
             echo 'PIPELINE TERMINE'
+        }
+
+        cleanup {
+            deleteDir()
         }
     }
 }
