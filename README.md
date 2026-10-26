@@ -150,6 +150,7 @@ The pipeline is defined in the [`Jenkinsfile`](Jenkinsfile) and runs as a Jenkin
 | Bump version | `main` only. Sets the Maven version to `1.<BUILD_NUMBER>` in the workspace (not committed) |
 | Build, Test & Coverage | `./mvnw clean verify`, then publishes JUnit results and the JaCoCo report |
 | SonarQube Analysis | Sends code and coverage data to SonarQube (`sonar-token` credential) |
+| Trivy image scan | Scans the built Docker image for known vulnerabilities |
 | Deploy to Nexus | `main` only. `./mvnw deploy -DskipTests` to the `maven-releases` repository (`nexus-creds` credential) |
 
 After the stages, the pipeline sends Slack and email notifications on success or failure, then wipes the workspace.
@@ -160,7 +161,7 @@ Pipeline options: 20-minute timeout, no concurrent builds, last 20 builds and 5 
 
 | Requirement | Details |
 |---|---|
-| Agent | JDK 17 on the PATH |
+| Agent | JDK 17, Docker and Trivy on the PATH |
 | Plugins | Pipeline, Git, JUnit, JaCoCo, Credentials Binding, Timestamper, Slack Notification, Email Extension |
 | Credentials | `sonar-token` (secret text), `nexus-creds` (username and password) |
 | Services | SonarQube on `127.0.0.1:9000`, Nexus on `127.0.0.1:8081` |
@@ -194,7 +195,7 @@ This project is also my playground for building a production-style DevOps workfl
 - [x] CI pipeline (Jenkins): build, unit tests, code coverage (JaCoCo)
 - [x] Static analysis: SonarQube (quality gate enforcement still to do)
 - [x] Build notifications: Slack and email
-- [ ] Container image scanning: Trivy
+- [x] Container image scanning: Trivy
 - [x] Maven artifact publishing to Nexus with versioned releases (`1.<build number>`)
 - [ ] Docker image publishing to a registry with versioned tags
 - [ ] Kubernetes manifests (Deployment, Service, ConfigMap, Secret, probes, resource limits)
