@@ -17,6 +17,7 @@ pipeline {
         }
 
         stage("Bump version"){
+            when { branch 'main'}
             steps{
                 sh './mvnw versions:set -DnewVersion=1.${BUILD_NUMBER} ' +
                         '-DgenerateBackupPoms=false'
@@ -55,6 +56,7 @@ pipeline {
         }
 
         stage("Deploy to Nexus") {
+            when { branch 'main'}
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     writeFile file: 'settings.xml', text: """<settings>

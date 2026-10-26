@@ -140,6 +140,42 @@ Ports are bound to `127.0.0.1` only: app on `8082`, Postgres on `5433` (to avoid
 
 The JAR is generated in `target/school-1.0.0.jar`.
 
+## CI Pipeline (Jenkins)
+
+The pipeline is defined in the [`Jenkinsfile`](Jenkinsfile) and runs as a Jenkins Multibranch Pipeline: feature branches and PRs are built, tested and analysed, while versioning and publishing to Nexus happen only on `main`.
+
+| Stage | What it does |
+|---|---|
+| Checkout | `checkout scm` from the job's configured repository |
+| Bump version | `main` only. Sets the Maven version to `1.<BUILD_NUMBER>` in the workspace (not committed) |
+| Build, Test & Coverage | `./mvnw clean verify`, then publishes JUnit results and the JaCoCo report |
+| SonarQube Analysis | Sends code and coverage data to SonarQube (`sonar-token` credential) |
+| Deploy to Nexus | `main` only. `./mvnw deploy -DskipTests` to the `maven-releases` repository (`nexus-creds` credential) |
+
+After the stages, the pipeline sends Slack and email notifications on success or failure, then wipes the workspace.
+
+Pipeline options: 20-minute timeout, no concurrent builds, last 20 builds and 5 artifact sets kept.
+
+### Jenkins requirements
+
+| Requirement | Details |
+|---|---|
+| Agent | JDK 17 on the PATH |
+| Plugins | Pipeline, Git, JUnit, JaCoCo, Credentials Binding, Timestamper, Slack Notification, Email Extension |
+| Credentials | `sonar-token` (secret text), `nexus-creds` (username and password) |
+| Services | SonarQube on `127.0.0.1:9000`, Nexus on `127.0.0.1:8081` |
+| Notifications | Slack workspace and SMTP settings configured in Jenkins |
+
+Credentials are stored in Jenkins and referenced by ID only. They never appear in the repository.
+
+### Local equivalent of the CI build
+
+```bash
+DB_USERNAME=school_user DB_PASSWORD=<your-local-password> DDL_AUTO=update \
+  ./mvnw -B clean verify
+open target/site/jacoco/index.html
+```
+
 ## Profiles
 
 | Profile | Purpose | Schema mode |
@@ -155,10 +191,12 @@ This project is also my playground for building a production-style DevOps workfl
 - [x] Externalized configuration (12-factor style, env vars + profiles)
 - [x] Multi-stage `Dockerfile` (non-root user, healthcheck; digest pinning still to do)
 - [x] `docker-compose.yml` for the app + PostgreSQL stack
-- [ ] CI pipeline: build, unit tests, code coverage (JaCoCo)
-- [ ] Static analysis: SonarQube
+- [x] CI pipeline (Jenkins): build, unit tests, code coverage (JaCoCo)
+- [x] Static analysis: SonarQube (quality gate enforcement still to do)
+- [x] Build notifications: Slack and email
 - [ ] Container image scanning: Trivy
-- [ ] Artifact and image registry publishing with versioned tags
+- [x] Maven artifact publishing to Nexus with versioned releases (`1.<build number>`)
+- [ ] Docker image publishing to a registry with versioned tags
 - [ ] Kubernetes manifests (Deployment, Service, ConfigMap, Secret, probes, resource limits)
 - [ ] GitOps deployment with ArgoCD
 - [ ] Configuration management with Ansible
@@ -179,4 +217,4 @@ This project is also my playground for building a production-style DevOps workfl
 
 ## License
 
-Not yet defined.
+This project is licensed under the [MIT License](LICENSE).
