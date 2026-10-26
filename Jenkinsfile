@@ -91,7 +91,8 @@ pipeline {
 
         stage("Container Image Scanning (Trivy)") {
             steps {
-                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:1.${BUILD_NUMBER}"
+                sh "trivy image --timeout 10m --exit-code 1 --severity HIGH," +
+                        "CRITICAL ${IMAGE_NAME}:1.${BUILD_NUMBER}"
             }
         }
     }
