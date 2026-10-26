@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -54,7 +53,33 @@ pipeline {
                 }
             }
         }
+    }
 
+    post {
+        success {
+            echo 'PIPELINE STATUS : SUCCESS'
 
+            // Email Success Notification
+            emailext(
+                    subject: "SUCCESS: Job '${env.JOB_NAME} [ #${env.BUILD_NUMBER} ]'",
+                    body: "The build passed successfully!\n\nView results in Jenkins: ${env.BUILD_URL}",
+                    to: "imedjadli@proton.me"
+            )
+        }
+
+        failure {
+            echo 'PIPELINE STATUS : FAILED'
+
+            // Email Failure Notification
+            emailext(
+                    subject: "FAILED: Job '${env.JOB_NAME} [ #${env.BUILD_NUMBER} ]'",
+                    body: "The build has failed. Please check the logs.\n\nConsole output: ${env.BUILD_URL}",
+                    to: "imedjadli@proton.me"
+            )
+        }
+
+        always {
+            echo 'PIPELINE TERMINE'
+        }
     }
 }
