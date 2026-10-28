@@ -3,6 +3,8 @@ pipeline {
 
     environment{
         IMAGE_NAME = 'school-backend-app'
+        OLLAMA_URL = 'http://127.0.0.1:11434'
+        OLLAMA_MODEL = 'llama3.2'
     }
 
     options {
@@ -17,6 +19,12 @@ pipeline {
         stage("Checkout"){
             steps{
                 checkout scm
+            }
+        }
+
+        stage('Prepare diagnostics') {
+            steps {
+                sh 'mkdir -p logs'
             }
         }
 
@@ -137,22 +145,59 @@ pipeline {
             )
         }
 
+
         failure {
             echo 'PIPELINE STATUS : FAILED'
 
-            // Slack Failure Notification
+            script {
+                int aiStatus = sh(
+                        script: 'python3 scripts/analyze_logs.py',
+                        returnStatus: true
+                )
+
+                if (aiStatus != 0) {
+                    echo 'AI analyzer encountered an error.'
+                }
+            }
+
+            def aiSummary = fileExists('incident-report.md')
+                    ? readFile('incident-report.md').take(2500)
+                    : 'AI incident report unavailable. Check Jenkins console logs.'
+
             slackSend(
                     color: 'danger',
-                    message: "❌ FAILED: Job '${env.JOB_NAME}' [Build #${env.BUILD_NUMBER}] failed. (<${env.BUILD_URL}|Open in Jenkins>)"
+                    message: "❌ FAILED: Job '${env.JOB_NAME}' " +
+                            "[Build #${env.BUILD_NUMBER}] failed.\n" +
+                            "AI analysis:\n${aiSummary}\n" +
+                            "<${env.BUILD_URL}|Open in Jenkins>"
             )
 
-            // Email Failure Notification
             emailext(
                     subject: "FAILED: Job '${env.JOB_NAME} [ #${env.BUILD_NUMBER} ]'",
-                    body: "The build has failed. Please check the logs.\n\nConsole output: ${env.BUILD_URL}",
+                    body: """The pipeline failed.
+
+AI incident analysis:
+${aiSummary}
+
+Full console output: ${env.BUILD_URL}
+See archived artifacts for the complete report and stage logs.
+""",
                     to: "imedjadli@proton.me"
             )
         }
+
+        always {
+            archiveArtifacts(
+                    artifacts: 'incident-report.md,logs/*.log',
+                    allowEmptyArchive: true
+            )
+            echo 'PIPELINE TERMINE'
+        }
+
+        cleanup {
+            deleteDir()
+        }
+
 
         always {
             echo 'PIPELINE TERMINE'
